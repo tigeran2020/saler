@@ -1,58 +1,11 @@
-use calamine::{self, DataType, Range, RangeDeserializerBuilder, Reader, Xls};
+use calamine::{self, DataType, Range, Reader, Xls};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
-#[derive(Debug)]
-pub struct Order {
-    id: String,               // 订单编号
-    pay_amount: f64,          // 实付款(元)
-    status: String,           // 订单状态
-    consignee: String,        // 收货人
-    shipping_address: String, // 收货地址
-    phone: String,            // 联系手机
-    item_name: String,        // 货品标题
-    total_count: i64,         // 数量
-}
-
-impl Order {
-    fn empty() -> Order {
-        Order {
-            id: String::from("unknow"),
-            pay_amount: 0.0,
-            status: String::from("unknow"),
-            consignee: String::from("unknow"),
-            shipping_address: String::from("unknow"),
-            phone: String::from("unknow"),
-            item_name: String::from("unknow"),
-            total_count: 0,
-        }
-    }
-
-    fn from_row(
-        item: &[calamine::DataType],
-        title_index: &HashMap<String, usize>,
-        last_order: &Order,
-    ) -> Order {
-        let total_count = get_float(item, title_index, "数量").unwrap_or(0.0) as i64;
-
-        Order {
-            id: get_string(item, title_index, "订单编号").unwrap_or(last_order.id.clone()),
-            pay_amount: get_float(item, title_index, "实付款(元)").unwrap_or(last_order.pay_amount),
-            status: get_string(item, title_index, "订单状态").unwrap_or(last_order.status.clone()),
-            consignee: get_string(item, title_index, "收货人姓名")
-                .unwrap_or(last_order.consignee.clone()),
-            shipping_address: get_string(item, title_index, "收货地址")
-                .unwrap_or(last_order.shipping_address.clone()),
-            phone: get_string(item, title_index, "联系手机").unwrap_or(last_order.phone.clone()),
-            item_name: get_string(item, title_index, "货品标题").unwrap_or(String::from("unknow"))
-                + " * "
-                + &total_count.to_string(),
-            total_count: total_count,
-        }
-    }
-}
+mod order;
+use order::Order;
 
 fn build_index(range: &Range<DataType>) -> Result<HashMap<String, usize>, String> {
     let mut title_index: HashMap<String, usize> = HashMap::new();
@@ -68,39 +21,9 @@ fn build_index(range: &Range<DataType>) -> Result<HashMap<String, usize>, String
     Ok(title_index)
 }
 
-fn get_string(
-    item: &[calamine::DataType],
-    title_index: &HashMap<String, usize>,
-    title: &str,
-) -> Option<String> {
-    let index = title_index.get(title)?;
-    let v = item[*index].get_string()?;
-    Some(String::from(v))
-}
-
-fn get_float(
-    item: &[calamine::DataType],
-    title_index: &HashMap<String, usize>,
-    title: &str,
-) -> Option<f64> {
-    let index = title_index.get(title)?;
-    let v = item[*index].get_float()?;
-    Some(v)
-}
-
-fn get_int(
-    item: &[calamine::DataType],
-    title_index: &HashMap<String, usize>,
-    title: &str,
-) -> Option<i64> {
-    let index = title_index.get(title)?;
-    let v = item[*index].get_int()?;
-    Some(v)
-}
-
 pub fn work() -> Result<(), String> {
     let orders = read_orders("./testdatas/src.xls")?;
-    save_orders("./testdata/dst.xls", &orders).expect("save order failed");
+    save_orders("./testdatas/dst.xls", &orders)?;
     Ok(())
 }
 
@@ -134,35 +57,22 @@ where
     Ok(res)
 }
 
-fn save_orders<P>(path: P, orders: &Vec<Order>) -> Result<(), std::io::Error> {
-    let mut file = File::create("./testdatas/dst.csv")?;
+fn save_orders<P>(path: P, orders: &Vec<Order>) -> Result<(), String>
+where
+    P: AsRef<Path>,
+{
+    let mut file = File::create(path).map_err(|err| format!("can't create dst file: {}", err))?;
     file.write(
         "订单编号,实付款(元),订单状态,收货人姓名,收货地址,联系手机,货品标题,数量\n".as_bytes(),
-    )?;
-    orders.iter().for_each(|order| {
-        let s = order.id.clone()
-            + ","
-            + &order.pay_amount.to_string()
-            + ","
-            + &order.status
-            + ","
-            + &order.consignee
-            + ","
-            + &order.shipping_address
-            + ","
-            + &order.phone
-            + ","
-            + &order.item_name
-            + ","
-            + &order.total_count.to_string()
-            + "\n";
-        file.write(s.as_bytes());
-    });
+    )
+    .map_err(|err| format!("write header failed: {}", err))?;
+    for order in orders.iter() {
+        file.write(order.as_csv_row().as_bytes())
+            .map_err(|err| format!("write order failed: {}", err))?;
+    }
 
     Ok(())
 }
-
-//id: "订单编号", pay_amount: 0.0, status: "订单状态", consignee: "收货人姓名", shipping_address: "收货地址", phone: "联系手机", item_name: "货品标题 * 0", total_count: 0
 
 #[cfg(test)]
 mod tests {
