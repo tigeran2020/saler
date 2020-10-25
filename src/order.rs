@@ -33,7 +33,7 @@ pub struct Order {
     total_count: i64,         // 数量
     pub group: u32,           // 所属组，即该订单的第一个商品的位置
     merged: bool,             // 是否为合并订单
-    splited: bool,            // 是否拆掉了单
+    pub splited: bool,        // 是否拆掉了单
 }
 
 impl Order {

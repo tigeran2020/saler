@@ -19,10 +19,25 @@ pub fn remove_repeat(orders: Vec<Order>) -> Vec<Order> {
 
 // remove_invalid_item 移除非条件商品
 pub fn remove_invalid_item(orders: Vec<Order>, item_no: String) -> Vec<Order> {
-    orders
+    let mut removed_orders = HashMap::<String, bool>::new();
+    let mut orders: Vec<Order> = orders
         .into_iter()
-        .filter(|order| order.item_no() == item_no)
-        .collect()
+        .filter(|order| {
+            let res = order.item_no() == item_no;
+            if !res {
+                removed_orders.insert(order.id.clone(), true);
+            }
+            res
+        })
+        .collect();
+
+    orders.iter_mut().for_each(|order| {
+        if removed_orders.get(&order.id).is_some() {
+            order.splited = true;
+        }
+    });
+
+    orders
 }
 
 #[cfg(test)]
@@ -39,6 +54,10 @@ mod tests {
         order.item_name = String::from("AJ001 helloworld");
         orders.push(order);
         let mut order = Order::empty();
+        order.id = String::from("order-1");
+        order.item_name = String::from("AJ003 helloworld");
+        orders.push(order);
+        let mut order = Order::empty();
         order.id = String::from("order-2");
         order.item_name = String::from("AJ002 helloworld");
         orders.push(order);
@@ -46,6 +65,7 @@ mod tests {
         orders = remove_invalid_item(orders, String::from("AJ001"));
         assert_eq!(orders.len(), 1);
         assert_eq!(orders[0].id, "order-1");
+        assert!(orders[0].splited);
     }
 
     #[test]
