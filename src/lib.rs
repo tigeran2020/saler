@@ -1,5 +1,6 @@
 use calamine::{self, DataType, Range, Reader};
 use chrono::Local;
+use simple_excel_writer::{self as excel, sheet::CellValue, sheet::Row, Workbook};
 use std::{collections::HashMap, env, fs::File, io::prelude::*, path::Path};
 
 mod opr;
@@ -45,7 +46,7 @@ impl Config {
 
 fn generate_dst_path(item_no: &String, total_count: usize) -> String {
     return format!(
-        "{}-{}-{}.csv",
+        "{}-{}-{}.xlsx",
         Local::now().format("%Y%m%d"),
         item_no,
         total_count
@@ -72,7 +73,7 @@ pub fn work() -> Result<(), String> {
         orders.len()
     );
 
-    save_orders(generate_dst_path(&config.item_no, orders.len()), &orders)?;
+    save_orders_to_xlsx(&generate_dst_path(&config.item_no, orders.len()), &orders)?;
     println!("save order finished");
 
     Ok(())
@@ -107,21 +108,36 @@ where
     Ok(res)
 }
 
-fn save_orders<P>(path: P, orders: &Vec<Order>) -> Result<(), String>
-where
-    P: AsRef<Path>,
-{
-    let mut file = File::create(path).map_err(|err| format!("can't create dst file: {}", err))?;
-    file.write(
-        "订单编号,合入订单,是否拆分,实付款(元),订单状态,收货人姓名,收货地址,联系手机,货品标题,数量\n".as_bytes(),
-    )
-    .map_err(|err| format!("write header failed: {}", err))?;
-    for order in orders.iter() {
-        file.write(order.as_csv_row().as_bytes())
-            .map_err(|err| format!("write order failed: {}", err))?;
-    }
+// save_orders_to_xlsx 保存订单到 xlsx 文件
+fn save_orders_to_xlsx(path: &str, orders: &Vec<Order>) -> Result<(), String> {
+    let mut wb = Workbook::create(path);
+    let mut sheet = wb.create_sheet("default");
 
-    Ok(())
+    wb.write_sheet(&mut sheet, |sheet_writer| {
+        let sw = sheet_writer;
+        sw.append_row(excel::row![
+            "订单编号",
+            "合入订单",
+            "是否拆分",
+            "实付款(元)",
+            "订单状态",
+            "收货人姓名",
+            "收货地址",
+            "联系手机",
+            "货品标题",
+            "数量"
+        ])?;
+
+        for order in orders.iter() {
+            sw.append_row(order.as_excel_row())?;
+        }
+        Ok(())
+    })
+    .map_err(|err| format!("write order failed: {}", err))?;
+
+    wb.close()
+        .map(|_| ())
+        .map_err(|err| format!("close dst file failed: {}", err))
 }
 
 #[cfg(test)]

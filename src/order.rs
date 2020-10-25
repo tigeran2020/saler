@@ -1,4 +1,5 @@
 use calamine::{self, DataType};
+use simple_excel_writer::{self as excel, sheet::CellValue, sheet::Row, Workbook};
 use std::collections::HashMap;
 
 fn get_string(
@@ -54,27 +55,19 @@ impl Order {
         }
     }
 
-    pub fn as_csv_row(&self) -> String {
-        return self.id.clone()
-            + ","
-            + &self.merged.join("&&")
-            + ","
-            + &self.splited.to_string()
-            + ","
-            + &format!("{:.2}", self.total_price)
-            + ","
-            + &self.status
-            + ","
-            + &self.consignee
-            + ","
-            + &self.shipping_address
-            + ","
-            + &self.phone
-            + ","
-            + &self.item_name
-            + ","
-            + &self.total_count.to_string()
-            + "\n";
+    pub fn as_excel_row(&self) -> Row {
+        excel::row![
+            self.id.clone(),
+            self.merged.join("\n"),
+            self.splited.to_string(),
+            format!("{:.2}", self.total_price),
+            self.status.clone(),
+            self.consignee.clone(),
+            self.shipping_address.clone(),
+            self.phone.clone(),
+            self.item_name.clone(),
+            self.total_count.to_string()
+        ]
     }
 
     pub fn empty() -> Order {
@@ -134,7 +127,7 @@ impl Order {
     }
 
     pub fn merge(&mut self, other: &Order) {
-        self.item_name += &("&&".to_owned() + &other.item_name);
+        self.item_name += &("\n".to_owned() + &other.item_name);
         self.total_count += other.total_count;
         self.total_price += other.total_price
     }

@@ -1,3 +1,5 @@
 /target
 /testdatas/dst.csv
 /*.csv
+/*.xlsx
+/*.zip
