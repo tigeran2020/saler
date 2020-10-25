@@ -1,4 +1,4 @@
-use calamine::{self, DataType, Range, Reader, Xls};
+use calamine::{self, DataType, Range, Reader};
 use chrono::Local;
 use std::{collections::HashMap, env, fs::File, io::prelude::*, path::Path};
 

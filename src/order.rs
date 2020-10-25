@@ -1,8 +1,8 @@
-use calamine::{self, DataType, Range, Reader, Xls};
+use calamine::{self, DataType};
 use std::collections::HashMap;
 
 fn get_string(
-    item: &[calamine::DataType],
+    item: &[DataType],
     title_index: &HashMap<String, usize>,
     title: &str,
 ) -> Option<String> {
@@ -13,7 +13,7 @@ fn get_string(
 
 // get_compatible_string 获取对 csv 兼容的字符串
 fn get_compatible_string(
-    item: &[calamine::DataType],
+    item: &[DataType],
     title_index: &HashMap<String, usize>,
     title: &str,
 ) -> Option<String> {
@@ -22,11 +22,7 @@ fn get_compatible_string(
     Some(v.replace(",", "，").replace("\n", "&&").replace("\r", ""))
 }
 
-fn get_float(
-    item: &[calamine::DataType],
-    title_index: &HashMap<String, usize>,
-    title: &str,
-) -> Option<f64> {
+fn get_float(item: &[DataType], title_index: &HashMap<String, usize>, title: &str) -> Option<f64> {
     let index = title_index.get(title)?;
     let v = item[*index].get_float()?;
     Some(v)
