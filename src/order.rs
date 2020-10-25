@@ -19,7 +19,7 @@ fn get_compatible_string(
 ) -> Option<String> {
     let index = title_index.get(title)?;
     let v = item[*index].get_string()?;
-    Some(v.replace(",", "，").replace("\n", "&&"))
+    Some(v.replace(",", "，").replace("\n", "&&").replace("\r", ""))
 }
 
 fn get_float(
@@ -58,6 +58,10 @@ impl Order {
 
     pub fn as_csv_row(&self) -> String {
         return self.id.clone()
+            + ","
+            + &self.merged.join("&&")
+            + ","
+            + &self.splited.to_string()
             + ","
             + &self.pay_amount.to_string()
             + ","

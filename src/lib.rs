@@ -113,7 +113,7 @@ where
 {
     let mut file = File::create(path).map_err(|err| format!("can't create dst file: {}", err))?;
     file.write(
-        "订单编号,实付款(元),订单状态,收货人姓名,收货地址,联系手机,货品标题,数量\n".as_bytes(),
+        "订单编号,合入订单,是否拆分,实付款(元),订单状态,收货人姓名,收货地址,联系手机,货品标题,数量\n".as_bytes(),
     )
     .map_err(|err| format!("write header failed: {}", err))?;
     for order in orders.iter() {
