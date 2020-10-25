@@ -82,8 +82,8 @@ fn read_orders<P>(path: P) -> Result<Vec<Order>, String>
 where
     P: AsRef<Path>,
 {
-    let mut workbook: Xls<_> =
-        calamine::open_workbook(path).map_err(|err| format!("can't open file: {}", err))?;
+    let mut workbook =
+        calamine::open_workbook_auto(path).map_err(|err| format!("can't open file: {}", err))?;
     let range = match workbook
         .worksheet_range_at(0)
         .ok_or(String::from("no sheet"))?
