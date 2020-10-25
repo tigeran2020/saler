@@ -44,7 +44,7 @@ impl Config {
     }
 }
 
-fn generate_dst_path(item_no: &String, total_count: usize) -> String {
+fn generate_dst_path(item_no: &String, total_count: i64) -> String {
     return format!(
         "{}-{}-{}.xlsx",
         Local::now().format("%Y%m%d"),
@@ -73,7 +73,12 @@ pub fn work() -> Result<(), String> {
         orders.len()
     );
 
-    save_orders_to_xlsx(&generate_dst_path(&config.item_no, orders.len()), &orders)?;
+    let mut count = 0;
+    orders.iter().for_each(|order| {
+        count += order.total_count;
+    });
+
+    save_orders_to_xlsx(&generate_dst_path(&config.item_no, count), &orders)?;
     println!("save order finished");
 
     Ok(())
