@@ -60,10 +60,20 @@ impl Order {
     }
 
     pub fn as_excel_row(&self) -> Row {
+        let mut splited = "";
+        if self.splited {
+            splited = "true"
+        }
+
+        let mut merged = "";
+        if self.merged.len() > 0 {
+            merged = "true";
+        }
+
         excel::row![
             self.id.clone(),
-            self.merged.join("\n"),
-            self.splited.to_string(),
+            merged,
+            splited,
             self.total_price,
             self.status.clone(),
             self.consignee.clone(),
