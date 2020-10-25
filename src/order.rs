@@ -63,7 +63,7 @@ impl Order {
             + ","
             + &self.splited.to_string()
             + ","
-            + &self.pay_amount.to_string()
+            + &format!("{:.2}", self.pay_amount)
             + ","
             + &self.status
             + ","
