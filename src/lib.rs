@@ -1,9 +1,7 @@
 use calamine::{self, DataType, Range, Reader, Xls};
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
+use std::{collections::HashMap, fs::File, io::prelude::*, path::Path};
 
+mod opr;
 mod order;
 use order::Order;
 
@@ -23,7 +21,14 @@ fn build_index(range: &Range<DataType>) -> Result<HashMap<String, usize>, String
 
 pub fn work() -> Result<(), String> {
     let orders = read_orders("./testdatas/src.xls")?;
-    save_orders("./testdatas/dst.xls", &orders)?;
+    println!("order count befor removing repeat: {}", orders.len());
+    let orders = opr::remove_repeat(orders);
+    println!("order count after removing repeat: {}", orders.len());
+    save_orders("./testdatas/dst.csv", &orders)?;
+
+    let orders = opr::remove_invalid_item(orders, String::from("AX199"));
+    println!("order count after removing ivalid: {}", orders.len());
+
     Ok(())
 }
 
@@ -46,11 +51,12 @@ where
     println!("build index success: {:?}", title_index);
 
     let mut res: Vec<Order> = Vec::new();
-    range.rows().skip(1).for_each(|item| {
+    range.rows().skip(1).enumerate().for_each(|(i, item)| {
         res.push(Order::from_row(
             item,
             title_index,
             res.last().unwrap_or(&Order::empty()),
+            (i + 1) as u32,
         ));
     });
 

@@ -23,20 +23,28 @@ fn get_float(
 
 #[derive(Debug)]
 pub struct Order {
-    id: String,               // 订单编号
+    pub id: String,           // 订单编号
     pay_amount: f64,          // 实付款(元)
     status: String,           // 订单状态
     consignee: String,        // 收货人
     shipping_address: String, // 收货地址
     phone: String,            // 联系手机
-    item_name: String,        // 货品标题
+    pub item_name: String,    // 货品标题
     total_count: i64,         // 数量
-    from_above: bool,         // 为 true 时表示从上一行订单拷贝而来
+    pub group: u32,           // 所属组，即该订单的第一个商品的位置
     merged: bool,             // 是否为合并订单
     splited: bool,            // 是否拆掉了单
 }
 
 impl Order {
+    // 返回货号
+    pub fn item_no(&self) -> String {
+        match self.item_name.find(" ") {
+            None => String::from(""),
+            Some(i) => String::from(&self.item_name[..i]),
+        }
+    }
+
     pub fn as_csv_row(&self) -> String {
         return self.id.clone()
             + ","
@@ -66,7 +74,7 @@ impl Order {
             phone: String::from("unknow"),
             item_name: String::from("unknow"),
             total_count: 0,
-            from_above: false,
+            group: 0,
             merged: false,
             splited: false,
         }
@@ -76,11 +84,17 @@ impl Order {
         item: &[calamine::DataType],
         title_index: &HashMap<String, usize>,
         last_order: &Order,
+        row_index: u32,
     ) -> Order {
         let total_count = get_float(item, title_index, "数量").unwrap_or(0.0) as i64;
+        let mut group = row_index;
+        let id = get_string(item, title_index, "订单编号").unwrap_or_else(|| {
+            group = last_order.group;
+            last_order.id.clone()
+        });
 
         Order {
-            id: get_string(item, title_index, "订单编号").unwrap_or(last_order.id.clone()),
+            id,
             pay_amount: get_float(item, title_index, "实付款(元)").unwrap_or(last_order.pay_amount),
             status: get_string(item, title_index, "订单状态").unwrap_or(last_order.status.clone()),
             consignee: get_string(item, title_index, "收货人姓名")
@@ -91,10 +105,30 @@ impl Order {
             item_name: get_string(item, title_index, "货品标题").unwrap_or(String::from("unknow"))
                 + " * "
                 + &total_count.to_string(),
-            total_count: total_count,
-            from_above: true,
+            total_count,
+            group,
             merged: false,
             splited: false,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    pub fn test_item_no() {
+        let mut order = Order::empty();
+        order.item_name = String::from("AJJ0 helloworld");
+        assert_eq!(order.item_no(), String::from("AJJ0"));
+    }
+
+    #[test]
+    pub fn test_empty_item_no() {
+        let mut order = Order::empty();
+        order.item_name = String::from("AJJ0helloworld");
+        assert_eq!(order.item_no().len(), 0);
     }
 }
