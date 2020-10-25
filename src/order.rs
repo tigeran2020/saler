@@ -35,6 +35,7 @@ fn get_float(
 #[derive(Debug)]
 pub struct Order {
     pub id: String,               // 订单编号
+    pub total_price: f64,         // 总价
     pay_amount: f64,              // 实付款(元)
     status: String,               // 订单状态
     pub consignee: String,        // 收货人
@@ -42,6 +43,7 @@ pub struct Order {
     pub phone: String,            // 联系手机
     pub item_name: String,        // 货品标题
     pub total_count: i64,         // 数量
+    pub price: f64,               // 单价
     pub group: u32,               // 所属组，即该订单的第一个商品的位置
     pub merged: Vec<String>,      // 合并了哪些订单
     pub splited: bool,            // 是否拆掉了单
@@ -63,7 +65,7 @@ impl Order {
             + ","
             + &self.splited.to_string()
             + ","
-            + &format!("{:.2}", self.pay_amount)
+            + &format!("{:.2}", self.total_price)
             + ","
             + &self.status
             + ","
@@ -82,6 +84,7 @@ impl Order {
     pub fn empty() -> Order {
         Order {
             id: String::from("unknow"),
+            total_price: 0.0,
             pay_amount: 0.0,
             status: String::from("unknow"),
             consignee: String::from("unknow"),
@@ -89,6 +92,7 @@ impl Order {
             phone: String::from("unknow"),
             item_name: String::from("unknow"),
             total_count: 0,
+            price: 0.0,
             group: 0,
             merged: vec![],
             splited: false,
@@ -102,6 +106,7 @@ impl Order {
         row_index: u32,
     ) -> Order {
         let total_count = get_float(item, title_index, "数量").unwrap_or(0.0) as i64;
+        let price = get_float(item, title_index, "单价(元)").unwrap_or(0.0);
         let mut group = row_index;
         let id = get_string(item, title_index, "订单编号").unwrap_or_else(|| {
             group = last_order.group;
@@ -110,6 +115,7 @@ impl Order {
 
         Order {
             id,
+            total_price: total_count as f64 * price,
             pay_amount: get_float(item, title_index, "实付款(元)").unwrap_or(last_order.pay_amount),
             status: get_compatible_string(item, title_index, "订单状态")
                 .unwrap_or(last_order.status.clone()),
@@ -124,20 +130,20 @@ impl Order {
                 + " * "
                 + &total_count.to_string(),
             total_count,
+            price,
             group,
             merged: vec![],
             splited: false,
         }
     }
 
-    pub fn merge_same(&mut self, other: &Order) {
+    pub fn merge(&mut self, other: &Order) {
         self.item_name += &("&&".to_owned() + &other.item_name);
         self.total_count += other.total_count;
+        self.total_price += other.total_price
     }
-
     pub fn merge_diff(&mut self, other: &Order) {
-        self.item_name += &("&&".to_owned() + &other.item_name);
-        self.total_count += other.total_count;
+        self.merge(other);
         self.merged.push(other.id.clone());
     }
 }

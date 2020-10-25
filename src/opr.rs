@@ -48,7 +48,7 @@ pub fn merge_same_order(orders: Vec<Order>) -> Vec<Order> {
     orders.into_iter().for_each(|order| {
         order_map
             .entry(order.id.clone())
-            .and_modify(|i| res_orders[*i].merge_same(&order))
+            .and_modify(|i| res_orders[*i].merge(&order))
             .or_insert_with(|| {
                 res_orders.push(order);
                 res_orders.len() - 1
