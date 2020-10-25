@@ -1,7 +1,7 @@
 use calamine::{self, DataType, Range, Reader};
 use chrono::Local;
-use simple_excel_writer::{self as excel, sheet::CellValue, sheet::Row, Workbook};
-use std::{collections::HashMap, env, fs::File, io::prelude::*, path::Path};
+use simple_excel_writer::{self as excel, sheet::Row, Workbook};
+use std::{collections::HashMap, env, path::Path};
 
 mod opr;
 mod order;

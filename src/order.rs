@@ -1,5 +1,5 @@
 use calamine::{self, DataType};
-use simple_excel_writer::{self as excel, sheet::CellValue, sheet::Row, Workbook};
+use simple_excel_writer::{self as excel, sheet::Row};
 use std::collections::HashMap;
 
 fn get_string(
