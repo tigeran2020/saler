@@ -1,5 +1,5 @@
 use calamine::{self, DataType, Range, Reader, Xls};
-use std::{collections::HashMap, fs::File, io::prelude::*, path::Path};
+use std::{collections::HashMap, env, fs::File, io::prelude::*, path::Path};
 
 mod opr;
 mod order;
@@ -19,13 +19,48 @@ fn build_index(range: &Range<DataType>) -> Result<HashMap<String, usize>, String
     Ok(title_index)
 }
 
+struct Config {
+    src_path: String,
+    dst_path: String,
+    item_no: String,
+}
+
+impl Config {
+    pub fn new(mut args: env::Args) -> Result<Config, String> {
+        args.next();
+
+        let src_path = match args.next() {
+            Some(arg) => arg,
+            None => return Err(String::from("Didn't get a src_path")),
+        };
+
+        let dst_path = match args.next() {
+            Some(arg) => arg,
+            None => return Err(String::from("Didn't get a dst_path")),
+        };
+
+        let item_no = match args.next() {
+            Some(arg) => arg,
+            None => return Err(String::from("Didn't get a item_no")),
+        };
+
+        Ok(Config {
+            src_path,
+            dst_path,
+            item_no,
+        })
+    }
+}
+
 pub fn work() -> Result<(), String> {
-    let orders = read_orders("./testdatas/src.xls")?;
+    let config = Config::new(env::args())?;
+
+    let orders = read_orders(config.src_path)?;
     println!("read orderes finished, order count: {}", orders.len());
     let orders = opr::remove_repeat(orders);
     println!("order count after removing repeat: {}", orders.len());
 
-    let orders = opr::remove_invalid_item(orders, String::from("AX199"));
+    let orders = opr::remove_invalid_item(orders, config.item_no);
     println!("order count after removing ivalid: {}", orders.len());
 
     let orders = opr::merge_same_order(orders);
@@ -37,7 +72,7 @@ pub fn work() -> Result<(), String> {
         orders.len()
     );
 
-    save_orders("./testdatas/dst.csv", &orders)?;
+    save_orders(config.dst_path, &orders)?;
     println!("save order finished");
 
     Ok(())
