@@ -1,1 +1,1 @@
-cargo run --bin qlion testdatas/src.xls testdatas/dst.csv AX199
+cargo run --bin qlion testdatas/src.xls AX199

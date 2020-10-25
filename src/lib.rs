@@ -1,4 +1,5 @@
 use calamine::{self, DataType, Range, Reader, Xls};
+use chrono::Local;
 use std::{collections::HashMap, env, fs::File, io::prelude::*, path::Path};
 
 mod opr;
@@ -21,7 +22,6 @@ fn build_index(range: &Range<DataType>) -> Result<HashMap<String, usize>, String
 
 struct Config {
     src_path: String,
-    dst_path: String,
     item_no: String,
 }
 
@@ -34,22 +34,22 @@ impl Config {
             None => return Err(String::from("Didn't get a src_path")),
         };
 
-        let dst_path = match args.next() {
-            Some(arg) => arg,
-            None => return Err(String::from("Didn't get a dst_path")),
-        };
-
         let item_no = match args.next() {
             Some(arg) => arg,
             None => return Err(String::from("Didn't get a item_no")),
         };
 
-        Ok(Config {
-            src_path,
-            dst_path,
-            item_no,
-        })
+        Ok(Config { src_path, item_no })
     }
+}
+
+fn generate_dst_path(item_no: &String, total_count: usize) -> String {
+    return format!(
+        "{}-{}-{}.csv",
+        Local::now().format("%Y%m%d"),
+        item_no,
+        total_count
+    );
 }
 
 pub fn work() -> Result<(), String> {
@@ -60,7 +60,7 @@ pub fn work() -> Result<(), String> {
     let orders = opr::remove_repeat(orders);
     println!("order count after removing repeat: {}", orders.len());
 
-    let orders = opr::remove_invalid_item(orders, config.item_no);
+    let orders = opr::remove_invalid_item(orders, &config.item_no);
     println!("order count after removing ivalid: {}", orders.len());
 
     let orders = opr::merge_same_order(orders);
@@ -72,7 +72,7 @@ pub fn work() -> Result<(), String> {
         orders.len()
     );
 
-    save_orders(config.dst_path, &orders)?;
+    save_orders(generate_dst_path(&config.item_no, orders.len()), &orders)?;
     println!("save order finished");
 
     Ok(())
