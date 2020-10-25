@@ -1,5 +1,5 @@
 use crate::order::Order;
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::Hash};
 
 // remove_repeat 删除重复的订单
 pub fn remove_repeat(orders: Vec<Order>) -> Vec<Order> {
@@ -58,10 +58,74 @@ pub fn merge_same_order(orders: Vec<Order>) -> Vec<Order> {
     res_orders
 }
 
+#[derive(PartialEq, Hash)]
+struct OrderKey {
+    consignee: String,        // 收货人
+    shipping_address: String, // 收货地址
+    phone: String,            // 联系手机
+}
+
+impl Eq for OrderKey {}
+
+pub fn merge_diff_order(orders: Vec<Order>) -> Vec<Order> {
+    let mut order_map = HashMap::<OrderKey, usize>::new();
+    let mut res_orders: Vec<Order> = Vec::new();
+
+    orders.into_iter().for_each(|order| {
+        let key = OrderKey {
+            consignee: order.consignee.clone(),
+            shipping_address: order.shipping_address.clone(),
+            phone: order.phone.clone(),
+        };
+        order_map
+            .entry(key)
+            .and_modify(|i| res_orders[*i].merge_diff(&order))
+            .or_insert_with(|| {
+                res_orders.push(order);
+                res_orders.len() - 1
+            });
+    });
+
+    res_orders
+}
+
 #[cfg(test)]
 mod tests {
 
     use super::*;
+
+    #[test]
+    fn test_merge_diff_order() {
+        let mut orders = Vec::new();
+        let mut order = Order::empty();
+        order.id = String::from("order-1");
+        order.consignee = String::from("xiaoming");
+        order.shipping_address = String::from("beijing");
+        order.phone = String::from("123456789");
+        order.item_name = String::from("AJ001 helloworld");
+        orders.push(order);
+        let mut order = Order::empty();
+        order.id = String::from("order-2");
+        order.consignee = String::from("xiaoming");
+        order.shipping_address = String::from("beijing");
+        order.phone = String::from("123456789");
+        order.item_name = String::from("AJ003 helloworld");
+        orders.push(order);
+        let mut order = Order::empty();
+        order.id = String::from("order-3");
+        order.consignee = String::from("xiaohuang");
+        order.shipping_address = String::from("beijing");
+        order.phone = String::from("123456789");
+        order.item_name = String::from("AJ002 helloworld");
+        orders.push(order);
+
+        orders = merge_diff_order(orders);
+        assert_eq!(orders.len(), 2);
+        assert_eq!(orders[0].id, "order-1");
+        assert_eq!(orders[0].item_name, "AJ001 helloworld&&AJ003 helloworld");
+        assert_eq!(orders[0].merged, vec![String::from("order-2")]);
+        assert_eq!(orders[1].id, "order-3");
+    }
 
     #[test]
     fn test_merge_same_order() {

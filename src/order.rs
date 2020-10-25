@@ -23,17 +23,17 @@ fn get_float(
 
 #[derive(Debug)]
 pub struct Order {
-    pub id: String,           // 订单编号
-    pay_amount: f64,          // 实付款(元)
-    status: String,           // 订单状态
-    consignee: String,        // 收货人
-    shipping_address: String, // 收货地址
-    phone: String,            // 联系手机
-    pub item_name: String,    // 货品标题
-    pub total_count: i64,     // 数量
-    pub group: u32,           // 所属组，即该订单的第一个商品的位置
-    merged: bool,             // 是否为合并订单
-    pub splited: bool,        // 是否拆掉了单
+    pub id: String,               // 订单编号
+    pay_amount: f64,              // 实付款(元)
+    status: String,               // 订单状态
+    pub consignee: String,        // 收货人
+    pub shipping_address: String, // 收货地址
+    pub phone: String,            // 联系手机
+    pub item_name: String,        // 货品标题
+    pub total_count: i64,         // 数量
+    pub group: u32,               // 所属组，即该订单的第一个商品的位置
+    pub merged: Vec<String>,      // 合并了哪些订单
+    pub splited: bool,            // 是否拆掉了单
 }
 
 impl Order {
@@ -75,7 +75,7 @@ impl Order {
             item_name: String::from("unknow"),
             total_count: 0,
             group: 0,
-            merged: false,
+            merged: vec![],
             splited: false,
         }
     }
@@ -107,14 +107,20 @@ impl Order {
                 + &total_count.to_string(),
             total_count,
             group,
-            merged: false,
+            merged: vec![],
             splited: false,
         }
     }
 
     pub fn merge_same(&mut self, other: &Order) {
         self.item_name += &("&&".to_owned() + &other.item_name);
-        self.total_count += other.total_count
+        self.total_count += other.total_count;
+    }
+
+    pub fn merge_diff(&mut self, other: &Order) {
+        self.item_name += &("&&".to_owned() + &other.item_name);
+        self.total_count += other.total_count;
+        self.merged.push(other.id.clone());
     }
 }
 

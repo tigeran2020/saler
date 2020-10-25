@@ -31,6 +31,12 @@ pub fn work() -> Result<(), String> {
     let orders = opr::merge_same_order(orders);
     println!("merge same orderes finished, order count: {}", orders.len());
 
+    let orders = opr::merge_diff_order(orders);
+    println!(
+        "merge different orderes finished, order count: {}",
+        orders.len()
+    );
+
     save_orders("./testdatas/dst.csv", &orders)?;
     println!("save order finished");
 
