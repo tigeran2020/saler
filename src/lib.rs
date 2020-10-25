@@ -1,6 +1,6 @@
 use calamine::{self, DataType, Range, Reader};
 use chrono::Local;
-use simple_excel_writer::{self as excel, sheet::Row, Workbook};
+use simple_excel_writer::Workbook;
 use std::{collections::HashMap, env, path::Path};
 
 mod opr;
@@ -115,19 +115,7 @@ fn save_orders_to_xlsx(path: &str, orders: &Vec<Order>) -> Result<(), String> {
 
     wb.write_sheet(&mut sheet, |sheet_writer| {
         let sw = sheet_writer;
-        sw.append_row(excel::row![
-            "订单编号",
-            "合入订单",
-            "是否拆分",
-            "实付款(元)",
-            "订单状态",
-            "收货人姓名",
-            "收货地址",
-            "联系手机",
-            "货品标题",
-            "数量"
-        ])?;
-
+        sw.append_row(Order::excel_title_row())?;
         for order in orders.iter() {
             sw.append_row(order.as_excel_row())?;
         }

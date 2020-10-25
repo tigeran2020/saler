@@ -55,6 +55,21 @@ impl Order {
         }
     }
 
+    pub fn excel_title_row() -> Row {
+        excel::row![
+            "订单编号",
+            "合入订单",
+            "是否拆分",
+            "实付款(元)",
+            "订单状态",
+            "收货人姓名",
+            "收货地址",
+            "联系手机",
+            "货品标题",
+            "数量"
+        ]
+    }
+
     pub fn as_excel_row(&self) -> Row {
         excel::row![
             self.id.clone(),
