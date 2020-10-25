@@ -46,7 +46,7 @@ impl Config {
 
 fn generate_dst_path(item_no: &String, total_count: i64) -> String {
     return format!(
-        "{}-{}-{}.xlsx",
+        "{}{} 总数{}.xlsx",
         Local::now().format("%Y%m%d"),
         item_no,
         total_count

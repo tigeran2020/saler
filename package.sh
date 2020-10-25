@@ -1,5 +1,5 @@
 PLATFORM=x86_64-pc-windows-gnu
-VERSION=1.0.0
+VERSION=1.0.2
 
 ZIP_NAME=fortune-$VERSION.zip
 
