@@ -21,13 +21,18 @@ fn build_index(range: &Range<DataType>) -> Result<HashMap<String, usize>, String
 
 pub fn work() -> Result<(), String> {
     let orders = read_orders("./testdatas/src.xls")?;
-    println!("order count befor removing repeat: {}", orders.len());
+    println!("read orderes finished, order count: {}", orders.len());
     let orders = opr::remove_repeat(orders);
     println!("order count after removing repeat: {}", orders.len());
-    save_orders("./testdatas/dst.csv", &orders)?;
 
     let orders = opr::remove_invalid_item(orders, String::from("AX199"));
     println!("order count after removing ivalid: {}", orders.len());
+
+    let orders = opr::merge_same_order(orders);
+    println!("merge same orderes finished, order count: {}", orders.len());
+
+    save_orders("./testdatas/dst.csv", &orders)?;
+    println!("save order finished");
 
     Ok(())
 }
@@ -47,8 +52,6 @@ where
     };
 
     let title_index = &build_index(&range)?;
-
-    println!("build index success: {:?}", title_index);
 
     let mut res: Vec<Order> = Vec::new();
     range.rows().skip(1).enumerate().for_each(|(i, item)| {

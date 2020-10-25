@@ -30,7 +30,7 @@ pub struct Order {
     shipping_address: String, // 收货地址
     phone: String,            // 联系手机
     pub item_name: String,    // 货品标题
-    total_count: i64,         // 数量
+    pub total_count: i64,     // 数量
     pub group: u32,           // 所属组，即该订单的第一个商品的位置
     merged: bool,             // 是否为合并订单
     pub splited: bool,        // 是否拆掉了单
@@ -110,6 +110,11 @@ impl Order {
             merged: false,
             splited: false,
         }
+    }
+
+    pub fn merge_same(&mut self, other: &Order) {
+        self.item_name += &("&&".to_owned() + &other.item_name);
+        self.total_count += other.total_count
     }
 }
 
