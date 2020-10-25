@@ -64,13 +64,13 @@ impl Order {
             self.id.clone(),
             self.merged.join("\n"),
             self.splited.to_string(),
-            format!("{:.2}", self.total_price),
+            self.total_price,
             self.status.clone(),
             self.consignee.clone(),
             self.shipping_address.clone(),
             self.phone.clone(),
             self.item_name.clone(),
-            self.total_count.to_string()
+            self.total_count as f64
         ]
     }
 
