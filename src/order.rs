@@ -12,17 +12,6 @@ fn get_string(
     Some(String::from(v))
 }
 
-// get_compatible_string 获取对 csv 兼容的字符串
-fn get_compatible_string(
-    item: &[DataType],
-    title_index: &HashMap<String, usize>,
-    title: &str,
-) -> Option<String> {
-    let index = title_index.get(title)?;
-    let v = item[*index].get_string()?;
-    Some(v.replace(",", "，").replace("\n", "&&").replace("\r", ""))
-}
-
 fn get_float(item: &[DataType], title_index: &HashMap<String, usize>, title: &str) -> Option<f64> {
     let index = title_index.get(title)?;
     let v = item[*index].get_float()?;
@@ -121,16 +110,13 @@ impl Order {
             id,
             total_price: total_count as f64 * price,
             pay_amount: get_float(item, title_index, "实付款(元)").unwrap_or(last_order.pay_amount),
-            status: get_compatible_string(item, title_index, "订单状态")
-                .unwrap_or(last_order.status.clone()),
-            consignee: get_compatible_string(item, title_index, "收货人姓名")
+            status: get_string(item, title_index, "订单状态").unwrap_or(last_order.status.clone()),
+            consignee: get_string(item, title_index, "收货人姓名")
                 .unwrap_or(last_order.consignee.clone()),
-            shipping_address: get_compatible_string(item, title_index, "收货地址")
+            shipping_address: get_string(item, title_index, "收货地址")
                 .unwrap_or(last_order.shipping_address.clone()),
-            phone: get_compatible_string(item, title_index, "联系手机")
-                .unwrap_or(last_order.phone.clone()),
-            item_name: get_compatible_string(item, title_index, "货品标题")
-                .unwrap_or(String::from("unknow"))
+            phone: get_string(item, title_index, "联系手机").unwrap_or(last_order.phone.clone()),
+            item_name: get_string(item, title_index, "货品标题").unwrap_or(String::from("unknow"))
                 + " * "
                 + &total_count.to_string(),
             total_count,

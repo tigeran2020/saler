@@ -1,6 +1,9 @@
 PLATFORM=x86_64-pc-windows-gnu
+VERSION=1.0.0
 
-rm -f $PLATFORM.zip
+ZIP_NAME=$PLATFORM-$VERSION.zip
+
+rm -f $ZIP_NAME
 
 mkdir tmp
 RUN_SCRIPT_PATH=./tmp/run.bat
@@ -14,6 +17,6 @@ echo "pause" >> $RUN_SCRIPT_PATH
 cp target/$PLATFORM/release/qlion.exe ./tmp/
 cp testdatas/src.xls ./tmp/
 
-zip -q -r -D -j $PLATFORM.zip tmp/ 
+zip -q -r -D -j $ZIP_NAME tmp/ 
 
 rm -rf tmp/
