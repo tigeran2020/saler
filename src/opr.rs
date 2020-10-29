@@ -58,6 +58,22 @@ pub fn merge_same_order(orders: Vec<Order>) -> Vec<Order> {
     res_orders
 }
 
+// mark_same_phone_order 为存在同号码的订单加上标记
+pub fn mark_same_phone_order(orders: &mut Vec<Order>) {
+    let mut phone_map = HashMap::<String, usize>::new();
+
+    orders.iter().for_each(|order| {
+        let count = phone_map.entry(order.phone.clone()).or_insert(0);
+        *count += 1;
+    });
+
+    orders.iter_mut().for_each(|order| {
+        if phone_map[&order.phone] > 1 {
+            order.has_same_phone_order = true;
+        }
+    });
+}
+
 #[derive(PartialEq, Hash)]
 struct OrderKey {
     consignee: String,        // 收货人
@@ -95,6 +111,30 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_mark_same_phone_order() {
+        let mut orders = Vec::new();
+        let mut order = Order::empty();
+        order.id = String::from("order-1");
+        order.phone = String::from("123456");
+        orders.push(order);
+
+        let mut order = Order::empty();
+        order.id = String::from("order-2");
+        order.phone = String::from("123456");
+        orders.push(order);
+
+        let mut order = Order::empty();
+        order.id = String::from("order-3");
+        order.phone = String::from("123457");
+        orders.push(order);
+
+        mark_same_phone_order(&mut orders);
+        assert!(orders[0].has_same_phone_order, true);
+        assert!(orders[1].has_same_phone_order, true);
+        assert!(!orders[2].has_same_phone_order);
+    }
+
+    #[test]
     fn test_merge_diff_order() {
         let mut orders = Vec::new();
         let mut order = Order::empty();
@@ -122,7 +162,7 @@ mod tests {
         orders = merge_diff_order(orders);
         assert_eq!(orders.len(), 2);
         assert_eq!(orders[0].id, "order-1");
-        assert_eq!(orders[0].item_name, "AJ001 helloworld&&AJ003 helloworld");
+        assert_eq!(orders[0].item_name, "AJ001 helloworld\nAJ003 helloworld");
         assert_eq!(orders[0].merged, vec![String::from("order-2")]);
         assert_eq!(orders[1].id, "order-3");
     }
@@ -146,7 +186,7 @@ mod tests {
         orders = merge_same_order(orders);
         assert_eq!(orders.len(), 2);
         assert_eq!(orders[0].id, "order-1");
-        assert_eq!(orders[0].item_name, "AJ001 helloworld&&AJ003 helloworld");
+        assert_eq!(orders[0].item_name, "AJ001 helloworld\nAJ003 helloworld");
     }
 
     #[test]

@@ -20,19 +20,21 @@ fn get_float(item: &[DataType], title_index: &HashMap<String, usize>, title: &st
 
 #[derive(Debug)]
 pub struct Order {
-    pub id: String,               // 订单编号
-    pub total_price: f64,         // 总价
-    pay_amount: f64,              // 实付款(元)
-    status: String,               // 订单状态
-    pub consignee: String,        // 收货人
-    pub shipping_address: String, // 收货地址
-    pub phone: String,            // 联系手机
-    pub item_name: String,        // 货品标题
-    pub total_count: i64,         // 数量
-    pub price: f64,               // 单价
-    pub group: u32,               // 所属组，即该订单的第一个商品的位置
-    pub merged: Vec<String>,      // 合并了哪些订单
-    pub splited: bool,            // 是否拆掉了单
+    pub id: String,                 // 订单编号
+    pub total_price: f64,           // 总价
+    pay_amount: f64,                // 实付款(元)
+    status: String,                 // 订单状态
+    pub consignee: String,          // 收货人
+    pub shipping_address: String,   // 收货地址
+    pub phone: String,              // 联系手机
+    pub item_name: String,          // 货品标题
+    pub total_count: i64,           // 数量
+    pub price: f64,                 // 单价
+    pub leave_msg: String,          // 买家留言
+    pub group: u32,                 // 所属组，即该订单的第一个商品的位置
+    pub merged: Vec<String>,        // 合并了哪些订单
+    pub splited: bool,              // 是否拆掉了单
+    pub has_same_phone_order: bool, // 是否存在同手机号的其它订单
 }
 
 impl Order {
@@ -47,40 +49,39 @@ impl Order {
     pub fn excel_title_row() -> Row {
         excel::row![
             "订单编号",
-            "合入订单",
-            "是否拆分",
+            "手动处理",
             "实付款(元)",
             "订单状态",
             "收货人姓名",
             "收货地址",
             "联系手机",
             "货品标题",
-            "数量"
+            "数量",
+            "买家留言"
         ]
     }
 
     pub fn as_excel_row(&self) -> Row {
-        let mut splited = "";
-        if self.splited {
-            splited = "true"
-        }
-
-        let mut merged = "";
-        if self.merged.len() > 0 {
-            merged = "true";
+        let mut flag = "";
+        if self.has_same_phone_order {
+            flag = "未合";
+        } else if self.merged.len() > 0 {
+            flag = "已合";
+        } else if self.splited {
+            flag = "已拆";
         }
 
         excel::row![
             self.id.clone(),
-            merged,
-            splited,
+            flag,
             self.total_price,
             self.status.clone(),
             self.consignee.clone(),
             self.shipping_address.clone(),
             self.phone.clone(),
             self.item_name.clone(),
-            self.total_count as f64
+            self.total_count as f64,
+            self.leave_msg.clone()
         ]
     }
 
@@ -96,9 +97,11 @@ impl Order {
             item_name: String::from("unknow"),
             total_count: 0,
             price: 0.0,
+            leave_msg: String::from(""),
             group: 0,
             merged: vec![],
             splited: false,
+            has_same_phone_order: false,
         }
     }
 
@@ -131,16 +134,23 @@ impl Order {
                 + &total_count.to_string(),
             total_count,
             price,
+            leave_msg: get_string(item, title_index, "买家留言").unwrap_or(String::from("")),
             group,
             merged: vec![],
             splited: false,
+            has_same_phone_order: false,
         }
     }
 
     pub fn merge(&mut self, other: &Order) {
         self.item_name += &("\n".to_owned() + &other.item_name);
         self.total_count += other.total_count;
-        self.total_price += other.total_price
+        self.total_price += other.total_price;
+        if self.leave_msg.len() > 0 && other.leave_msg.len() > 0 {
+            self.leave_msg += &("\n".to_owned() + &other.leave_msg);
+        } else {
+            self.leave_msg += &other.leave_msg;
+        }
     }
     pub fn merge_diff(&mut self, other: &Order) {
         self.merge(other);

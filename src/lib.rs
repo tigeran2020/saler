@@ -67,11 +67,14 @@ pub fn work() -> Result<(), String> {
     let orders = opr::merge_same_order(orders);
     println!("merge same orderes finished, order count: {}", orders.len());
 
-    let orders = opr::merge_diff_order(orders);
+    let mut orders = opr::merge_diff_order(orders);
     println!(
         "merge different orderes finished, order count: {}",
         orders.len()
     );
+
+    opr::mark_same_phone_order(&mut orders);
+    println!("mark same phone order finished");
 
     let mut count = 0;
     orders.iter().for_each(|order| {
