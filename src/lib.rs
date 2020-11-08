@@ -65,12 +65,12 @@ pub fn work() -> Result<(), String> {
     println!("order count after removing ivalid: {}", orders.len());
 
     let orders = opr::merge_same_order(orders);
-    println!("merge same orderes finished, order count: {}", orders.len());
+    println!("merge same orderes finished, order count: {}", orders.len(),);
 
     let mut orders = opr::merge_diff_order(orders);
     println!(
         "merge different orderes finished, order count: {}",
-        orders.len()
+        orders.len(),
     );
 
     opr::mark_same_phone_order(&mut orders);
