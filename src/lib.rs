@@ -44,12 +44,23 @@ impl Config {
     }
 }
 
-fn generate_dst_path(item_no: &String, total_count: i64) -> String {
+fn generate_dst_path(item_no: &String, orders: &Vec<Order>) -> String {
+    let mut name = "";
+    let mut count = 0;
+    orders.iter().for_each(|order| {
+        count += order.total_count;
+        if name == "" {
+            if let Some(x) = orders[0].item_name.split(' ').nth(1) {
+                name = x;
+            }
+        }
+    });
     return format!(
-        "{}{} 总数{}.xlsx",
+        "{}{} {}{}ida.xlsx",
         Local::now().format("%Y%m%d"),
-        item_no,
-        total_count
+        item_no.to_uppercase(),
+        name,
+        count
     );
 }
 
@@ -76,12 +87,7 @@ pub fn work() -> Result<(), String> {
     opr::mark_same_phone_order(&mut orders);
     println!("mark same phone order finished");
 
-    let mut count = 0;
-    orders.iter().for_each(|order| {
-        count += order.total_count;
-    });
-
-    save_orders_to_xlsx(&generate_dst_path(&config.item_no, count), &orders)?;
+    save_orders_to_xlsx(&generate_dst_path(&config.item_no, &orders), &orders)?;
     println!("save order finished");
 
     Ok(())

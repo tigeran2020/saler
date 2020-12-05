@@ -23,7 +23,7 @@ pub fn remove_invalid_item(orders: Vec<Order>, item_no: &String) -> Vec<Order> {
     let mut orders: Vec<Order> = orders
         .into_iter()
         .filter(|order| {
-            let res = order.item_no() == *item_no;
+            let res = order.item_no().to_lowercase() == item_no.to_lowercase();
             if !res {
                 removed_orders.insert(order.id.clone(), true);
             }
@@ -390,7 +390,7 @@ mod tests {
         order.item_name = String::from("AJ002 helloworld");
         orders.push(order);
 
-        orders = remove_invalid_item(orders, &String::from("AJ001"));
+        orders = remove_invalid_item(orders, &String::from("aJ001"));
         assert_eq!(orders.len(), 1);
         assert_eq!(orders[0].id, "order-1");
         assert!(orders[0].splited);
