@@ -63,13 +63,15 @@ impl Order {
     }
 
     pub fn as_excel_row(&self) -> Row {
-        let mut flag = "";
+        let mut flag = String::new();
         if self.has_same_phone_order {
-            flag = "未合";
-        } else if self.merged.len() > 0 {
-            flag = "已合";
-        } else if self.splited {
-            flag = "已拆";
+            flag += "未合";
+        }
+        if self.merged.len() > 0 {
+            flag += "已合";
+        }
+        if self.splited {
+            flag += "已拆";
         }
 
         let mut phone = &self.phone;
